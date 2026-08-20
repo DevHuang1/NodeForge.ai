@@ -49,7 +49,7 @@ export async function runNode2(
   systemPromptOverride?: string,
   model?: string,
   provider?: string
-): Promise<{ artifact: Node2Artifact; usage: ChatResult["usage"] }> {
+): Promise<{ artifact: Node2Artifact; usage: ChatResult["usage"]; provider: string; model: string }> {
   const feedbackBlock = buildFeedbackBlock(feedback);
   const user = [
     "Input artifact (Raw Task Record):",
@@ -82,7 +82,7 @@ export async function runNode2(
       "Spec was fully formed despite a blocked status; normalized to ready_for_execution so the pipeline can continue."
     );
   }
-  return { artifact, usage: result.usage };
+  return { artifact, usage: result.usage, provider: result.provider, model: result.model };
 }
 
 export async function runNode3(
@@ -95,7 +95,7 @@ export async function runNode3(
   systemPromptOverride?: string,
   model?: string,
   provider?: string
-): Promise<{ artifact: Node3Artifact; usage: ChatResult["usage"] }> {
+): Promise<{ artifact: Node3Artifact; usage: ChatResult["usage"]; provider: string; model: string }> {
   const feedbackBlock = buildFeedbackBlock(feedback);
   const user = [
     "Input artifact (Explicit System Specification):",
@@ -128,7 +128,7 @@ export async function runNode3(
   });
   const artifact = result.json as Node3Artifact;
   artifact.request_id = artifact.request_id || requestId;
-  return { artifact, usage: result.usage };
+  return { artifact, usage: result.usage, provider: result.provider, model: result.model };
 }
 
 export async function runNode4(
@@ -141,7 +141,7 @@ export async function runNode4(
   systemPromptOverride?: string,
   model?: string,
   provider?: string
-): Promise<{ artifact: Node4Artifact; usage: ChatResult["usage"] }> {
+): Promise<{ artifact: Node4Artifact; usage: ChatResult["usage"]; provider: string; model: string }> {
   const feedbackBlock = buildFeedbackBlock(feedback);
   const user = [
     "Input artifact (Explicit System Specification):",
@@ -176,7 +176,7 @@ export async function runNode4(
   });
   const artifact = result.json as Node4Artifact;
   artifact.request_id = artifact.request_id || requestId;
-  return { artifact, usage: result.usage };
+  return { artifact, usage: result.usage, provider: result.provider, model: result.model };
 }
 
 export async function runBaseline(

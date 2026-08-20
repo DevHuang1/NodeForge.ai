@@ -169,8 +169,8 @@ export interface PromptOverrides {
 }
 
 export interface UsageInfo {
-  provider: string;
-  model: string;
+  provider?: string;
+  model?: string;
   input_tokens: number;
   output_tokens: number;
 }
@@ -222,4 +222,222 @@ export interface ApiConfig {
   priority: "o" | "f";
   defaultTemperature: number;
   maxTokens: number;
+}
+
+// ── Repository-aware review ────────────────────────────────────────────────
+
+export type ReviewStage =
+  | "context"
+  | "expand"
+  | "analyze"
+  | "execute"
+  | "security"
+  | "synthesize"
+  | "done"
+  | "error";
+
+export type ReviewRunStatus = "pending" | "running" | "done" | "error";
+
+export interface PullRequestFile {
+  path: string;
+  status: "added" | "modified" | "removed" | "renamed";
+  additions: number;
+  deletions: number;
+  content: string;
+  unifiedDiff: string;
+  lines: string[];
+  binary: boolean;
+}
+
+export interface PullRequest {
+  owner: string;
+  repo: string;
+  number: number;
+  title: string;
+  body: string;
+  baseSha: string;
+  headSha: string;
+  baseRef: string;
+  headRef: string;
+  url: string;
+  files: PullRequestFile[];
+  totalAdditions: number;
+  totalDeletions: number;
+}
+
+export interface ContextFileSelection {
+  path: string;
+  sizeBytes: number;
+  estimatedTokens: number;
+  reason: "changed" | "manifest" | "readme" | "import" | "test" | "ignored";
+  selected: boolean;
+}
+
+export interface RepositoryContext {
+  owner: string;
+  repo: string;
+  headSha: string;
+  baseSha: string;
+  language: string;
+  framework: string;
+  testCommand: string | null;
+  files: ContextFileSelection[];
+  changedTokens: number;
+  budget: number;
+  summary: string;
+}
+
+export type FindingSource = "deterministic" | "model";
+
+export interface ReviewFinding {
+  id: string;
+  category: string;
+  severity: Severity;
+  description: string;
+  evidence: string;
+  file_path: string;
+  line_start?: number;
+  line_end?: number;
+  confidence: "low" | "medium" | "high";
+  recommended_action: string;
+  source: FindingSource;
+  recommended_route?: RouteTarget;
+}
+
+export type FindingDecisionAction =
+  | "approve"
+  | "dismiss"
+  | "request_revision"
+  | "assign";
+
+export interface FindingDecision {
+  findingId: string;
+  action: FindingDecisionAction;
+  reason: string;
+  reviewer?: string;
+  at: string;
+}
+
+export interface PatchProposal {
+  description: string;
+  diff: string;
+  files: Array<{ path: string; status: string; content: string }>;
+  approved: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface TestExecutionItem {
+  id: string;
+  name: string;
+  maps_to: string[];
+  verification_status: VerificationStatus;
+  exit_code: number | null;
+  duration_ms: number;
+  stdout: string;
+  stderr: string;
+  failure_reason: string;
+  observed_result: string;
+}
+
+export interface TestExecutionSummary {
+  status: "ok" | "partial" | "failed" | "blocked" | "offline_sample";
+  tested: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  not_executed: number;
+  duration_ms: number;
+  items: TestExecutionItem[];
+  notes: string[];
+  sandbox: string;
+}
+
+export interface ReviewRun {
+  id: string;
+  owner: string;
+  repo: string;
+  prNumber: number;
+  title: string;
+  baseSha: string;
+  headSha: string;
+  status: ReviewRunStatus;
+  currentStage: ReviewStage;
+  stageLog: Array<{ stage: ReviewStage; at: string; detail?: string }>;
+  context: RepositoryContext | null;
+  artifacts: PipelineArtifacts;
+  deterministicFindings: ReviewFinding[];
+  modelFindings: ReviewFinding[];
+  testResult: TestExecutionSummary | null;
+  patch: PatchProposal | null;
+  decisions: FindingDecision[];
+  provider: string | null;
+  model: string | null;
+  usage: Record<string, UsageInfo | undefined>;
+  durationMs: number;
+  retryCount: number;
+  promptVersion: string;
+  policyVersion: string;
+  offline: boolean;
+  errors: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewRunSummary {
+  id: string;
+  owner: string;
+  repo: string;
+  prNumber: number;
+  title: string;
+  status: ReviewRunStatus;
+  currentStage: ReviewStage;
+  headSha: string;
+  findingsCount: number;
+  offline: boolean;
+  provider: string | null;
+  durationMs: number;
+  createdAt: string;
+}
+
+export type AuditAction =
+  | "finding.approve"
+  | "finding.dismiss"
+  | "finding.request_revision"
+  | "finding.assign"
+  | "patch.approve"
+  | "patch.reject"
+  | "review.comment"
+  | "run.create"
+  | "run.reload"
+  | "version.publish"
+  | "version.rollback";
+
+export interface AuditEvent {
+  id: string;
+  at: string;
+  actor: string;
+  action: AuditAction;
+  entity: string;
+  entityId: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface EvaluationMetrics {
+  requirementCoverage: number;
+  testExecutionAccuracy: number | null;
+  findingPrecision: number | null;
+  findingRecall: number | null;
+  hallucinatedClaims: number;
+  latencyMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  providerFallbacks: number;
+}
+
+export interface EvaluationResult {
+  runId: string;
+  metrics: EvaluationMetrics;
+  regressionDelta: number | null;
+  markdown: string;
 }

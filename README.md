@@ -62,6 +62,19 @@ Two things make it more than a chain of prompts:
   and persisted; the live demo picks up your changes.
 - **Editable Mermaid diagram** of the architecture (copy / download `.mmd` / PNG).
 - **Exportable run reports** (Markdown or JSON).
+- **Repository-aware pull-request review.** Select a repo/PR, ingest changed
+  files plus surrounding context under a token budget, run the four-node
+  pipeline, then layer deterministic security checks (secrets, shell injection,
+  unsafe deserialization, injection, prompt injection, dependency/license
+  policy) over the diff. Findings are reviewable inline with approve/dismiss/
+  request-revision/assign decisions, a patch proposal can be approved or
+  rejected, and every run persists to history with audit events and evaluation
+  metrics. Works fully offline with the bundled sample PR
+  (`acme/notes-search#42`); with a `GITHUB_TOKEN` it fetches real PRs.
+- **Honest test reporting.** No sandbox is configured today, so the review's
+  test step labels every test `proposed` / `not executed` and never claims a
+  run — the executor refuses anything not on its allow-list (`pytest`,
+  `go test`, `npm test`) and blocks shell pipelines, `rm -rf`, etc.
 - Dark mode, human-review panel, and revision timeline.
 
 ## Getting started
@@ -88,8 +101,16 @@ Copy `.env.example` to `.env.local` and set at least one provider key:
 | `LLM_PROVIDER_PRIORITY` | `o` (OpenRouter first) or `f` (Featherless first) |
 | `LLM_TEMPERATURE` / `LLM_MAX_TOKENS` | Sampling defaults |
 | `NEXT_PUBLIC_SITE_URL` / `NEXT_PUBLIC_SITE_NAME` | Provider attribution headers |
+| `GITHUB_TOKEN` | Enables live PR retrieval; unset ⇒ offline sample only |
+| `GITHUB_MAX_FILES` | Cap on changed files fetched per PR (default 30) |
+| `NODEFORGE_EXECUTOR` | Test backend (`offline` today; never claims execution) |
+| `NODEFORGE_DATA_DIR` | Review-run/audit persistence dir (default `./.data`) |
 
 Providers are tried in order with automatic fallback on failure.
+
+Review runs and audit events are persisted to `./.data/store.json` (git-ignored).
+On Vercel's read-only serverless filesystem they fall back to in-memory storage
+for the lifetime of the function instance.
 
 ## Scripts
 
@@ -98,6 +119,7 @@ npm run dev        # development server
 npm run build      # production build
 npm run start      # production server
 npm run lint       # eslint
+npm test           # node:test unit suite (lib + API logic, offline only)
 ```
 
 ## Deployment
@@ -109,7 +131,8 @@ Vercel dashboard — the API keys are server-only; nothing is committed.
 ## Repository layout
 
 ```
-app/          App Router routes: pages + API routes (/api/config, /api/baseline, /api/pipeline/run)
-components/   UI: PipelineDemo, NodeCard, QualityGate, Scorecard, PromptLibrary, MermaidSection, ...
-lib/          Core logic: prompts, pipeline orchestration, LLM abstraction, validation, samples
+app/          App Router routes: pages + API routes (/api/config, /api/baseline, /api/pipeline/run, /api/reviews, /api/findings/..., /api/evaluation, /api/history)
+components/   UI: PipelineDemo, NodeCard, QualityGate, Scorecard, ReviewPanel, PromptLibrary, MermaidSection, ...
+lib/          Core logic: prompts, pipeline orchestration, LLM abstraction, repository context, security rules, executor, persistence, audit, evaluation
+tests/        Unit tests (node:test)
 ```
