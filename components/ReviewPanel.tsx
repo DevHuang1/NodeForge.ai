@@ -24,6 +24,13 @@ import type {
 
 type Phase = "idle" | "loading" | "running" | "done" | "error";
 
+interface OpenPr {
+  number: number;
+  title: string;
+  headRef: string;
+  baseRef: string;
+}
+
 const SEVERITY_TONE: Record<string, string> = {
   critical: "bg-gate text-white",
   high: "bg-gate text-white",
@@ -47,6 +54,9 @@ export function ReviewPanel() {
   const [report, setReport] = useState<string | null>(null);
   const [gitHubConfigured, setGitHubConfigured] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [prs, setPrs] = useState<OpenPr[]>([]);
+  const [prError, setPrError] = useState<string | null>(null);
+  const [prLoading, setPrLoading] = useState(false);
 
   const refreshHistory = useCallback(async () => {
     try {
@@ -69,6 +79,28 @@ export function ReviewPanel() {
       .then((d) => setGitHubConfigured(Boolean(d.gitHubConfigured)))
       .catch(() => setGitHubConfigured(null));
   }, [refreshHistory]);
+
+  async function loadPullRequests() {
+    setPrLoading(true);
+    setPrError(null);
+    setPrs([]);
+    try {
+      const res = await fetch(
+        `/api/repositories/${encodeURIComponent(owner.trim())}/${encodeURIComponent(repo.trim())}/pull-requests`,
+        { headers: token.trim() ? { "x-github-token": token.trim() } : undefined }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setPrError(data.error ?? "Could not load pull requests.");
+        return;
+      }
+      setPrs((data.pullRequests ?? []) as OpenPr[]);
+    } catch (e) {
+      setPrError((e as Error).message);
+    } finally {
+      setPrLoading(false);
+    }
+  }
 
   async function runReview() {
     setPhase("running");
@@ -257,8 +289,55 @@ export function ReviewPanel() {
                 >
                   Load sample PR
                 </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={loadPullRequests}
+                  disabled={prLoading || !owner.trim() || !repo.trim()}
+                >
+                  {prLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                  )}
+                  Load open PRs
+                </Button>
               </div>
             </div>
+
+            {prError && (
+              <p className="mt-4 text-[11px] text-gate">{prError}</p>
+            )}
+
+            {prs.length > 0 && (
+              <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Open PRs in {owner.trim()}/{repo.trim()} — pick one
+                </p>
+                <ul className="mt-2 max-h-48 space-y-1 overflow-auto">
+                  {prs.map((p) => (
+                    <li key={p.number}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNumber(p.number);
+                          setPrs([]);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-secondary"
+                      >
+                        <span className="shrink-0 font-mono text-muted-foreground">
+                          #{p.number}
+                        </span>
+                        <span className="truncate text-foreground">{p.title}</span>
+                        <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
+                          {p.headRef} → {p.baseRef}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {!token.trim() && gitHubConfigured === false && (
               <p className="mt-4 text-[11px] text-muted-foreground">
