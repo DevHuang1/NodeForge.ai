@@ -7,7 +7,7 @@ import { getSamplePr } from "../lib/sample-pr";
 import { evaluateRun } from "../lib/evaluation";
 import { resetStore, listReviewRuns } from "../lib/persistence";
 import { recordAudit, assertAuditAction } from "../lib/audit";
-import { getOfflinePr, getOfflinePrList } from "../lib/github";
+import { getOfflinePr, getOfflinePrList, resolveToken } from "../lib/github";
 
 beforeEach(async () => {
   process.env.NODEFORGE_DATA_DIR = path.join(os.tmpdir(), `nodeforge-test-${Date.now()}`);
@@ -77,4 +77,17 @@ test("github module falls back to offline fixtures without a token", () => {
   assert.equal(pr!.owner, "acme");
   assert.equal(getOfflinePrList().length, 1);
   if (before) process.env.GITHUB_TOKEN = before;
+});
+
+test("resolveToken strips non-ASCII and falls back to env", () => {
+  const before = process.env.GITHUB_TOKEN;
+  delete process.env.GITHUB_TOKEN;
+  assert.equal(resolveToken("github_pat_abc\u00E9def"), "github_pat_abcdef");
+  assert.equal(resolveToken("  "), undefined);
+  assert.equal(resolveToken(undefined), undefined);
+  process.env.GITHUB_TOKEN = "env-token";
+  assert.equal(resolveToken(undefined), "env-token");
+  assert.equal(resolveToken("provided"), "provided");
+  if (before) process.env.GITHUB_TOKEN = before;
+  else delete process.env.GITHUB_TOKEN;
 });

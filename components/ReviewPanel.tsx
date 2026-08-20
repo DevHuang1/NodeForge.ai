@@ -81,13 +81,14 @@ export function ReviewPanel() {
   }, [refreshHistory]);
 
   async function loadPullRequests() {
+    const t = token.trim().replace(/[^\x20-\x7E]+/g, "");
     setPrLoading(true);
     setPrError(null);
     setPrs([]);
     try {
       const res = await fetch(
         `/api/repositories/${encodeURIComponent(owner.trim())}/${encodeURIComponent(repo.trim())}/pull-requests`,
-        { headers: token.trim() ? { "x-github-token": token.trim() } : undefined }
+        { headers: t ? { "x-github-token": t } : undefined }
       );
       const data = await res.json();
       if (!res.ok) {
@@ -115,7 +116,7 @@ export function ReviewPanel() {
           owner: owner.trim() || "acme",
           repo: repo.trim() || "notes-search",
           number: Number(number) || 42,
-          token: token.trim() || undefined,
+          token: token.trim().replace(/[^\x20-\x7E]+/g, "") || undefined,
         }),
       });
       const data = await res.json();
@@ -260,8 +261,14 @@ export function ReviewPanel() {
                   onChange={(e) => setToken(e.target.value)}
                   autoComplete="off"
                   className="h-10 w-full rounded-lg border border-border bg-background px-3 font-mono text-sm outline-none focus:border-node4"
-                  placeholder="paste a fine-grained PAT · ghp_…"
+                  placeholder="paste a fine-grained PAT · github_pat_…"
                 />
+                {/[^\x20-\x7E]/.test(token) && (
+                  <p className="text-[11px] text-gate">
+                    The token contains non-ASCII characters — a copy/paste
+                    glitch. Please paste it again.
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Button

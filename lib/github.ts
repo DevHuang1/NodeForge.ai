@@ -7,7 +7,9 @@ const MAX_FILES = Number(process.env.GITHUB_MAX_FILES ?? 30);
 const MAX_CONTENT_BYTES = 512 * 1024;
 
 export function resolveToken(token?: string): string | undefined {
-  return token && token.trim() ? token.trim() : process.env.GITHUB_TOKEN || undefined;
+  const clean =
+    token && token.trim() ? token.trim().replace(/[^\x20-\x7E]+/g, "") : undefined;
+  return clean || process.env.GITHUB_TOKEN || undefined;
 }
 
 export function hasGitHubCredentials(token?: string): boolean {
