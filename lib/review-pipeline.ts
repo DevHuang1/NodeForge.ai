@@ -205,9 +205,10 @@ export async function createReviewRun(
   const deterministicFindings = runDeterministicChecks(pr.files);
 
   mark("execute");
-  const execResponse = runExecutor({
+  const execResponse = await runExecutor({
     artifact: artifacts.node3!,
     context,
+    files: pr.files,
   });
   const testResult = execResponse.summary;
 

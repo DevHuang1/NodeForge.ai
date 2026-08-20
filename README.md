@@ -103,12 +103,18 @@ Copy `.env.example` to `.env.local` and set at least one provider key:
 | `NEXT_PUBLIC_SITE_URL` / `NEXT_PUBLIC_SITE_NAME` | Provider attribution headers |
 | `GITHUB_TOKEN` | Enables live PR retrieval; unset ⇒ offline sample only |
 | `GITHUB_MAX_FILES` | Cap on changed files fetched per PR (default 30) |
+| `NODEFORGE_EXECUTOR` | Test backend: `offline` (default, never claims execution), `local` (guarded real run in a temp dir; needs the toolchain), or `sandbox` (reserved) |
+| `NODEFORGE_DATA_DIR` | Review-run/audit persistence dir (default `./.data`) |
 
 A `GITHUB_TOKEN` env var enables real PR retrieval for every user. Judges can
 also paste their own fine-grained PAT ("Contents: Read") into the PR Review
 token field — it is used per-request, server-side only, and never stored.
-| `NODEFORGE_EXECUTOR` | Test backend (`offline` today; never claims execution) |
-| `NODEFORGE_DATA_DIR` | Review-run/audit persistence dir (default `./.data`) |
+
+With `NODEFORGE_EXECUTOR=local`, the review's test step runs the allow-listed
+test command (`pytest` / `go test` / `npm test`) in an isolated temp dir with a
+hard timeout and reports genuine pass/fail. Only the repository-context detected
+command is ever run — never the model's raw output — and if the toolchain is
+missing it honestly reports `blocked` / not executed.
 
 Providers are tried in order with automatic fallback on failure.
 

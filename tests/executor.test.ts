@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   checkCommandSafety,
   offlineRun,
+  parsePytestOutput,
+  snakeCase,
   EXECUTION_POLICY,
 } from "../lib/executor";
 import { getSamplePr } from "../lib/sample-pr";
@@ -43,6 +45,35 @@ test("offlineRun never claims executed tests", () => {
 test("execution policy is finite and conservative", () => {
   assert.ok(EXECUTION_POLICY.timeoutMs > 0);
   assert.ok(EXECUTION_POLICY.timeoutMs <= 300_000);
-  assert.equal(EXECUTION_POLICY.network, "denied");
+  assert.equal(EXECUTION_POLICY.network, "denied-by-default");
   assert.deepEqual(EXECUTION_POLICY.allowList, ["pytest", "go test", "npm test"]);
+});
+
+test("snakeCase maps test names to function names", () => {
+  assert.equal(snakeCase("Search returns matches"), "search_returns_matches");
+  assert.equal(snakeCase("Empty keyword rejected"), "empty_keyword_rejected");
+  assert.equal(snakeCase("  Recent Notes!! "), "recent_notes");
+});
+
+test("parsePytestOutput extracts real pass/fail from pytest -v output", () => {
+  const output = [
+    "============================= test session starts =============================",
+    "tests/test_search.py::test_search_returns_matches PASSED",
+    "tests/test_search.py::test_search_missing_keyword_raises FAILED",
+    "tests/test_search.py::test_recent_uses_index PASSED",
+    "==================== 2 passed, 1 failed, 3 collected in 0.21s =================",
+  ].join("\n");
+  const parsed = parsePytestOutput(output);
+  assert.equal(parsed.passed, 2);
+  assert.equal(parsed.failed, 1);
+  assert.equal(parsed.collected, 3);
+  assert.deepEqual(parsed.passedNames, ["test_search_returns_matches", "test_recent_uses_index"]);
+  assert.deepEqual(parsed.failedNames, ["test_search_missing_keyword_raises"]);
+});
+
+test("parsePytestOutput handles toolchain-unavailable output", () => {
+  const parsed = parsePytestOutput("ModuleNotFoundError: No module named 'pytest'");
+  assert.equal(parsed.passed, 0);
+  assert.equal(parsed.failed, 0);
+  assert.equal(parsed.collected, 0);
 });
