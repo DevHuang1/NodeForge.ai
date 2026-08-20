@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const MANIFEST = [
   ["agentic_pipeline_detailed.mmd", "Editable Mermaid source (detailed architecture)"],
   ["agentic_pipeline_detailed.png", "Rendered PNG flowchart for submission"],
@@ -17,7 +19,19 @@ export function Footer() {
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr]">
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/nodeforge-logo-minimal-transparent.png"
+                alt="NodeForge.ai logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+              />
+              <span className="font-heading text-lg font-semibold tracking-tight text-foreground">
+                NodeForge<span className="text-muted-foreground">.ai</span>
+              </span>
+            </div>
+            <h3 className="mt-6 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               Responsible-use note
             </h3>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">

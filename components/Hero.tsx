@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
 import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,13 +23,21 @@ export function Hero() {
         }}
       />
       <div className="relative mx-auto max-w-[1400px] px-6 pb-24 pt-20 sm:px-10 sm:pb-32 sm:pt-28">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="max-w-4xl"
-        >
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground">
+<motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="max-w-4xl"
+          >
+            <Image
+              src="/nodeforge-logo-minimal-transparent.png"
+              alt="NodeForge.ai logo"
+              width={96}
+              height={96}
+              className="mb-6 h-16 w-16 rounded-2xl object-contain sm:h-20 sm:w-20"
+              priority
+            />
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground">
             Track 2 · ML Prompt Engineering · Interactive submission
           </p>
           <h1 className="font-heading text-5xl leading-[1.05] tracking-tight sm:text-6xl">
