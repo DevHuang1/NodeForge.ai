@@ -39,6 +39,7 @@ export function ReviewPanel() {
   const [owner, setOwner] = useState("acme");
   const [repo, setRepo] = useState("notes-search");
   const [number, setNumber] = useState(42);
+  const [token, setToken] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [run, setRun] = useState<ReviewRun | null>(null);
   const [runs, setRuns] = useState<ReviewRunSummary[]>([]);
@@ -82,6 +83,7 @@ export function ReviewPanel() {
           owner: owner.trim() || "acme",
           repo: repo.trim() || "notes-search",
           number: Number(number) || 42,
+          token: token.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -216,6 +218,19 @@ export function ReviewPanel() {
                   className="h-10 w-24 rounded-lg border border-border bg-background px-3 font-mono text-sm outline-none focus:border-node4"
                 />
               </div>
+              <div className="flex min-w-[300px] flex-1 flex-col gap-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  GitHub token (optional — for real PRs)
+                </label>
+                <input
+                  type="password"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  autoComplete="off"
+                  className="h-10 w-full rounded-lg border border-border bg-background px-3 font-mono text-sm outline-none focus:border-node4"
+                  placeholder="paste a fine-grained PAT · ghp_…"
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <Button
                   onClick={runReview}
@@ -237,6 +252,7 @@ export function ReviewPanel() {
                     setOwner(s.owner);
                     setRepo(s.repo);
                     setNumber(s.number);
+                    setToken("");
                   }}
                 >
                   Load sample PR
@@ -244,10 +260,13 @@ export function ReviewPanel() {
               </div>
             </div>
 
-            {gitHubConfigured === false && (
+            {!token.trim() && gitHubConfigured === false && (
               <p className="mt-4 text-[11px] text-muted-foreground">
-                GITHUB_TOKEN not configured — only the bundled sample PR
-                (acme/notes-search#42) is available.
+                No GitHub token set — only the bundled sample PR
+                (acme/notes-search#42) is available. Add a fine-grained PAT with
+                “Contents: Read” to review a real pull request. It is sent to our
+                server per request, used only to fetch from GitHub, and never
+                stored.
               </p>
             )}
           </CardContent>

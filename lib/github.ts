@@ -6,8 +6,12 @@ const API = "https://api.github.com";
 const MAX_FILES = Number(process.env.GITHUB_MAX_FILES ?? 30);
 const MAX_CONTENT_BYTES = 512 * 1024;
 
-export function hasGitHubCredentials(): boolean {
-  return Boolean(process.env.GITHUB_TOKEN);
+export function resolveToken(token?: string): string | undefined {
+  return token && token.trim() ? token.trim() : process.env.GITHUB_TOKEN || undefined;
+}
+
+export function hasGitHubCredentials(token?: string): boolean {
+  return Boolean(resolveToken(token));
 }
 
 export interface GitHubConfig {
@@ -16,10 +20,10 @@ export interface GitHubConfig {
   maxFiles: number;
 }
 
-export function getGitHubConfig(): GitHubConfig {
+export function getGitHubConfig(token?: string): GitHubConfig {
   return {
-    enabled: hasGitHubCredentials(),
-    tokenSet: hasGitHubCredentials(),
+    enabled: hasGitHubCredentials(token),
+    tokenSet: hasGitHubCredentials(token),
     maxFiles: MAX_FILES,
   };
 }
@@ -34,12 +38,12 @@ function ghError(message: string, status: number): GitHubError {
   return err;
 }
 
-async function gh<T>(path: string): Promise<T> {
-  const token = process.env.GITHUB_TOKEN;
+async function gh<T>(path: string, token?: string): Promise<T> {
+  const effective = resolveToken(token);
   const res = await fetch(`${API}${path}`, {
     headers: {
       Accept: "application/vnd.github.v3+json, application/vnd.github.v3.diff",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${effective}`,
       "User-Agent": "NodeForge.ai",
     },
     signal: AbortSignal.timeout(30_000),
@@ -88,8 +92,15 @@ export interface PullRequestLite {
   baseRef: string;
 }
 
-export async function listPullRequests(owner: string, repo: string): Promise<PullRequestLite[]> {
-  const items = await gh<GhPull[]>(`/repos/${owner}/${repo}/pulls?state=open&per_page=30`);
+export async function listPullRequests(
+  owner: string,
+  repo: string,
+  token?: string
+): Promise<PullRequestLite[]> {
+  const items = await gh<GhPull[]>(
+    `/repos/${owner}/${repo}/pulls?state=open&per_page=30`,
+    token
+  );
   return items.map((p) => ({
     number: p.number,
     title: p.title,
@@ -104,11 +115,13 @@ async function fetchFileContent(
   owner: string,
   repo: string,
   path: string,
-  ref: string
+  ref: string,
+  token?: string
 ): Promise<string | null> {
   try {
     const data = await gh<GhContent>(
-      `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`
+      `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`,
+      token
     );
     if (!data.content) return null;
     const buf = Buffer.from(data.content, "base64");
@@ -122,17 +135,25 @@ async function fetchFileContent(
 export async function getPullRequest(
   owner: string,
   repo: string,
-  number: number
+  number: number,
+  token?: string
 ): Promise<PullRequest> {
-  const meta = await gh<GhPull>(`/repos/${owner}/${repo}/pulls/${number}`);
-  const files = await gh<GhFile[]>(`/repos/${owner}/${repo}/pulls/${number}/files?per_page=100`);
+  const effective = resolveToken(token);
+  if (!effective) {
+    throw ghError("No GitHub token provided for this request.", 401);
+  }
+  const meta = await gh<GhPull>(`/repos/${owner}/${repo}/pulls/${number}`, effective);
+  const files = await gh<GhFile[]>(
+    `/repos/${owner}/${repo}/pulls/${number}/files?per_page=100`,
+    effective
+  );
 
   const changed: PullRequestFile[] = [];
   for (const f of files.slice(0, MAX_FILES)) {
     if (isIgnoredPath(f.filename)) continue;
     let content = "";
     if (f.status !== "removed") {
-      const raw = await fetchFileContent(owner, repo, f.filename, meta.head.sha);
+      const raw = await fetchFileContent(owner, repo, f.filename, meta.head.sha, effective);
       if (raw !== null) content = raw;
     }
     const binary = isBinaryFile(f.filename, content || f.patch || "");
@@ -173,7 +194,8 @@ export interface PrSource {
 export function resolvePr(
   owner?: string,
   repo?: string,
-  number?: number
+  number?: number,
+  token?: string
 ): { pr: PullRequest | null; source: PrSource } {
   if (
     owner &&
@@ -183,7 +205,7 @@ export function resolvePr(
   ) {
     return { pr: getSamplePr(owner, repo, number), source: { mode: "offline" } };
   }
-  if (hasGitHubCredentials() && owner && repo && number) {
+  if (hasGitHubCredentials(token) && owner && repo && number) {
     return { pr: null, source: { mode: "github" } };
   }
   return {

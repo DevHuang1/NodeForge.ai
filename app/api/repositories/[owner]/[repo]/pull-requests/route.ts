@@ -1,4 +1,5 @@
-import { listPullRequests, hasGitHubCredentials, getOfflinePrList } from "@/lib/github";
+import { listPullRequests, hasGitHubCredentials } from "@/lib/github";
+import { getOfflinePrList } from "@/lib/github";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -8,8 +9,9 @@ interface Params {
   repo: string;
 }
 
-export async function GET(_request: Request, ctx: { params: Promise<Params> }) {
+export async function GET(request: Request, ctx: { params: Promise<Params> }) {
   const { owner, repo } = await ctx.params;
+  const token = request.headers.get("x-github-token")?.trim() || undefined;
 
   if (
     owner.toLowerCase() === "acme" &&
@@ -21,20 +23,20 @@ export async function GET(_request: Request, ctx: { params: Promise<Params> }) {
     });
   }
 
-  if (!hasGitHubCredentials()) {
+  if (!hasGitHubCredentials(token)) {
     return Response.json(
       {
         mode: "offline",
         pullRequests: [],
         error:
-          "No GITHUB_TOKEN configured. Only the bundled sample repository (acme/notes-search) is available offline.",
+          "No GitHub token configured. Only the bundled sample repository (acme/notes-search) is available offline.",
       },
       { status: 400 }
     );
   }
 
   try {
-    const pullRequests = await listPullRequests(owner, repo);
+    const pullRequests = await listPullRequests(owner, repo, token);
     return Response.json({ mode: "github", pullRequests });
   } catch (err) {
     return Response.json(

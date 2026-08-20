@@ -103,6 +103,10 @@ Copy `.env.example` to `.env.local` and set at least one provider key:
 | `NEXT_PUBLIC_SITE_URL` / `NEXT_PUBLIC_SITE_NAME` | Provider attribution headers |
 | `GITHUB_TOKEN` | Enables live PR retrieval; unset ⇒ offline sample only |
 | `GITHUB_MAX_FILES` | Cap on changed files fetched per PR (default 30) |
+
+A `GITHUB_TOKEN` env var enables real PR retrieval for every user. Judges can
+also paste their own fine-grained PAT ("Contents: Read") into the PR Review
+token field — it is used per-request, server-side only, and never stored.
 | `NODEFORGE_EXECUTOR` | Test backend (`offline` today; never claims execution) |
 | `NODEFORGE_DATA_DIR` | Review-run/audit persistence dir (default `./.data`) |
 

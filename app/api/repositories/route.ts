@@ -1,16 +1,17 @@
 import {
   getGitHubConfig,
-  getOfflinePrList,
   hasGitHubCredentials,
+  getOfflinePrList,
 } from "@/lib/github";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const config = getGitHubConfig();
+export async function GET(request: Request) {
+  const token = request.headers.get("x-github-token")?.trim() || undefined;
+  const config = getGitHubConfig(token);
   return Response.json({
     gitHubConfigured: config.enabled,
-    tokenSet: hasGitHubCredentials(),
+    tokenSet: hasGitHubCredentials(token),
     maxFiles: config.maxFiles,
     offlineSample: getOfflinePrList(),
   });
