@@ -41,6 +41,9 @@ yarn-error.log*
 # local review persistence
 .data/
 
+# local pitch / demo notes (not tracked)
+PITCH.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
