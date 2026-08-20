@@ -1,26 +1,195 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-fraunces);
+
+  /* Pipeline node accents — tuned for light backgrounds */
+  --color-node1: #1e7a50;
+  --color-node2: #2f5bd0;
+  --color-node3: #6b3fc4;
+  --color-node4: #b0760a;
+  --color-gate: #c43d3d;
+  --color-final: #0e7f86;
+  --color-rev: #6b7280;
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --font-heading: var(--font-heading);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: oklch(0.982 0.003 90);
+  --foreground: oklch(0.21 0.02 258);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 258);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 258);
+  --primary: oklch(0.23 0.03 258);
+  --primary-foreground: oklch(0.985 0.001 90);
+  --secondary: oklch(0.955 0.006 90);
+  --secondary-foreground: oklch(0.27 0.025 258);
+  --muted: oklch(0.955 0.006 90);
+  --muted-foreground: oklch(0.52 0.02 258);
+  --accent: oklch(0.945 0.008 258);
+  --accent-foreground: oklch(0.24 0.03 258);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.9 0.008 258);
+  --input: oklch(0.88 0.01 258);
+  --ring: oklch(0.62 0.05 258);
+  --chart-1: oklch(0.55 0.12 258);
+  --chart-2: oklch(0.6 0.1 180);
+  --chart-3: oklch(0.7 0.1 80);
+  --chart-4: oklch(0.6 0.12 30);
+  --chart-5: oklch(0.6 0.14 300);
+  --radius: 0.7rem;
+  --sidebar: oklch(0.985 0.002 90);
+  --sidebar-foreground: oklch(0.21 0.02 258);
+  --sidebar-primary: oklch(0.23 0.03 258);
+  --sidebar-primary-foreground: oklch(0.985 0.001 90);
+  --sidebar-accent: oklch(0.945 0.008 258);
+  --sidebar-accent-foreground: oklch(0.24 0.03 258);
+  --sidebar-border: oklch(0.9 0.008 258);
+  --sidebar-ring: oklch(0.62 0.05 258);
+}
+
+.dark {
+  --background: oklch(0.145 0.005 258);
+  --foreground: oklch(0.985 0.001 90);
+  --card: oklch(0.205 0.01 258);
+  --card-foreground: oklch(0.985 0.001 90);
+  --popover: oklch(0.205 0.01 258);
+  --popover-foreground: oklch(0.985 0.001 90);
+  --primary: oklch(0.92 0.002 90);
+  --primary-foreground: oklch(0.2 0.01 258);
+  --secondary: oklch(0.27 0.012 258);
+  --secondary-foreground: oklch(0.985 0.001 90);
+  --muted: oklch(0.27 0.012 258);
+  --muted-foreground: oklch(0.71 0.015 258);
+  --accent: oklch(0.29 0.015 258);
+  --accent-foreground: oklch(0.985 0.001 90);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.58 0.05 258);
+  --chart-1: oklch(0.87 0.02 258);
+  --chart-2: oklch(0.556 0.02 258);
+  --chart-3: oklch(0.439 0.02 258);
+  --chart-4: oklch(0.371 0.02 258);
+  --chart-5: oklch(0.269 0.02 258);
+  --sidebar: oklch(0.205 0.01 258);
+  --sidebar-foreground: oklch(0.985 0.001 90);
+  --sidebar-primary: oklch(0.488 0.06 258);
+  --sidebar-primary-foreground: oklch(0.985 0.001 90);
+  --sidebar-accent: oklch(0.29 0.015 258);
+  --sidebar-accent-foreground: oklch(0.985 0.001 90);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.58 0.05 258);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 84px;
+}
+
+h1,
+h2,
+h3,
+.font-heading {
+  font-family: var(--font-heading);
+  font-weight: 520;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: oklch(0.72 0.09 258 / 0.35);
+}
+
+pre,
+code {
+  font-family: var(--font-mono);
+}
+
+.mermaid-scroll svg {
+  max-width: 100%;
+  height: auto;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes draw-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.flow-line {
+  stroke-dasharray: 6 5;
+  animation: draw-dash 1.4s linear infinite;
 }
