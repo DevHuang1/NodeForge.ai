@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "motion/react";
 import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,14 +28,6 @@ export function Hero() {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="max-w-4xl"
           >
-            <Image
-              src="/nodeforge-logo-minimal-transparent.png"
-              alt="NodeForge.ai logo"
-              width={96}
-              height={96}
-              className="mb-6 h-16 w-16 rounded-2xl object-contain sm:h-20 sm:w-20"
-              priority
-            />
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground">
             Track 2 · ML Prompt Engineering · Interactive submission
           </p>
