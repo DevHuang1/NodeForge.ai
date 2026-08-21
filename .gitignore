@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+# dependencies (any depth)
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -17,18 +17,25 @@
 /.next/
 /out/
 
-# production
+# production & build output
 /build
+dist/
 
-# misc
+# misc OS/editor noise
 .DS_Store
-*.pem
+Thumbs.db
+.idea/
+.vscode/
 
-# debug
+# logs, caches, packaged artifacts
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.eslintcache
+*.tsbuildinfo
+*.tgz
 
 # env files (can opt-in for committing if needed)
 .env
@@ -44,6 +51,10 @@ yarn-error.log*
 # local pitch / demo notes (not tracked)
 PITCH.md
 
-# typescript
-*.tsbuildinfo
+# typescript / remotion locals
 next-env.d.ts
+REMOTION.md
+/remotion
+
+# nodeforge cli local state
+.nodeforge/

@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nodeforge.ai/schemas/nodeforge-config-v1.json",
+  "title": "nodeforge configuration",
+  "description": "Schema for .nodeforge/config.json. Unknown fields are ignored by nodeforge; fields with the wrong type are reported as issues and cause exit code 2.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "scan": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "maxFiles": {
+          "description": "Maximum number of files examined per scan.",
+          "type": "integer",
+          "minimum": 1,
+          "default": 2000
+        },
+        "maxFileBytes": {
+          "description": "Files larger than this many bytes are hashed but not content-scanned.",
+          "type": "integer",
+          "minimum": 1,
+          "default": 524288
+        },
+        "excludeDirs": {
+          "description": "Directory names skipped during repository-relative scanning (symlink-safe).",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "default": [
+            "node_modules",
+            ".git",
+            ".next",
+            "dist",
+            "build",
+            "vendor",
+            "venv",
+            ".venv",
+            "__pycache__",
+            "coverage",
+            ".data",
+            ".nodeforge"
+          ]
+        }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Whether test discovery and guarded execution run as part of review.",
+          "type": "boolean",
+          "default": true
+        },
+        "timeoutMs": {
+          "description": "Hard per-command test timeout in milliseconds; the child process group is killed on expiry.",
+          "type": "integer",
+          "minimum": 1,
+          "default": 30000
+        },
+        "network": {
+          "description": "Test network policy. 'denied' strips proxy/network environment variables from the child process (best-effort).",
+          "type": "string",
+          "enum": ["denied", "allowed"],
+          "default": "denied"
+        },
+        "runnerOverride": {
+          "description": "Force a specific detected runner instead of auto-detection, or null to auto-detect.",
+          "type": ["string", "null"],
+          "minLength": 1,
+          "default": null
+        },
+        "commandOverride": {
+          "description": "Replace the runner command with a custom argv. Every element must still pass the command allow-list; the argv is never run through a shell.",
+          "type": ["array", "null"],
+          "items": { "type": "string" },
+          "default": null
+        },
+        "onBlocked": {
+          "description": "How review treats blocked test execution: report it as 'blocked' or ignore it and continue.",
+          "type": "string",
+          "enum": ["blocked", "ignore"],
+          "default": "blocked"
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Enable optional LLM analysis. Disabled by default; deterministic scanning never depends on it.",
+          "type": "boolean",
+          "default": false
+        },
+        "provider": {
+          "description": "Analysis provider kind exposed behind the AnalysisProvider seam.",
+          "type": "string",
+          "default": "openai-compatible"
+        },
+        "model": {
+          "description": "Model identifier passed to the provider, or null for the provider default.",
+          "type": ["string", "null"],
+          "minLength": 1,
+          "default": null
+        },
+        "baseUrl": {
+          "description": "OpenAI-compatible API base URL override, or null to use the provider default.",
+          "type": ["string", "null"],
+          "minLength": 1,
+          "default": null
+        },
+        "maxFindings": {
+          "description": "Maximum number of findings forwarded to LLM analysis per run.",
+          "type": "integer",
+          "minimum": 0,
+          "default": 10
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "backend": {
+          "description": "RunRepository backend. 'fs' persists under storage.dir; 'memory' keeps runs for the current process only.",
+          "type": "string",
+          "enum": ["fs", "memory"],
+          "default": "fs"
+        },
+        "dir": {
+          "description": "Directory where runs are persisted when backend is 'fs'.",
+          "type": "string",
+          "minLength": 1,
+          "default": ".nodeforge/runs"
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "artifacts": {
+          "description": "Whether raw artifacts are written alongside structured results in each run directory.",
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+name: CLI
+
+on:
+  push:
+    paths:
+      - "packages/cli/**"
+      - ".github/workflows/cli.yml"
+  pull_request:
+    paths:
+      - "packages/cli/**"
+      - ".github/workflows/cli.yml"
+
+jobs:
+  cli:
+    name: Verify CLI package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: packages/cli/package-lock.json
+
+      - name: Install workspace CLI dependencies
+        working-directory: packages/cli
+        run: npm ci --no-fund --no-audit
+
+      - name: Install root dependencies (shared ESLint config)
+        run: npm ci --no-fund --no-audit
+
+      - name: Typecheck
+        working-directory: packages/cli
+        run: npm run typecheck
+
+      - name: Lint
+        run: npx eslint packages/cli/src packages/cli/tests packages/cli/bin
+
+      - name: Test
+        working-directory: packages/cli
+        run: npm test
+
+      - name: Build
+        working-directory: packages/cli
+        run: npm run build
+
+      - name: Pack
+        working-directory: packages/cli
+        run: npm run package
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-package
+          path: packages/cli/*.tgz
+          if-no-files-found: error

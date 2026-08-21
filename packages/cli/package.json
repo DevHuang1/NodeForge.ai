@@ -1,0 +1,51 @@
+{
+  "name": "@nodeforge/cli",
+  "version": "0.1.0",
+  "description": "Evidence-first code verification CLI: deterministic security scanning, guarded test execution, honest reporting, and audit trails.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "nodeforge": "./bin/nodeforge.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "config",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": [
+    "code-review",
+    "security",
+    "verification",
+    "sarif",
+    "cli",
+    "nodeforge"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/nodeforge-ai",
+    "directory": "packages/cli"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src tests bin",
+    "test": "node --import tsx --test \"tests/unit/*.test.ts\" \"tests/integration/*.test.ts\"",
+    "test:unit": "node --import tsx --test \"tests/unit/*.test.ts\"",
+    "test:integration": "node --import tsx --test \"tests/integration/*.test.ts\"",
+    "package": "npm pack"
+  },
+  "dependencies": {
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.2"
+  }
+}
