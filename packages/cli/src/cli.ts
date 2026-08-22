@@ -77,7 +77,7 @@ export function buildProgram(
     .description(
       "Full verification workflow: context, capabilities, scan, tests, analysis.",
     )
-    .argument("<target>", "local repository path or GitHub pull request URL")
+    .argument("[target]", "local repository path or GitHub pull request URL", ".")
     .action(async (target: string) => {
       const opts = program.opts<GlobalOptions>();
       await reviewAction(
@@ -94,7 +94,7 @@ export function buildProgram(
     .description(
       "Deterministic security scan of a local directory (no execution).",
     )
-    .argument("<path>", "path to the project root")
+    .argument("[path]", "path to the project root", ".")
     .action(async (targetPath: string) => {
       const opts = program.opts<GlobalOptions>();
       await scanAction(
@@ -111,7 +111,7 @@ export function buildProgram(
     .description(
       "Discover and execute the project's test suite under sandbox policy.",
     )
-    .argument("<path>", "path to the project root")
+    .argument("[path]", "path to the project root", ".")
     .action(async (targetPath: string) => {
       const opts = program.opts<GlobalOptions>();
       await testAction(

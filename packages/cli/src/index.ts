@@ -1,5 +1,5 @@
 /**
- * @nodeforge/cli — public API surface.
+ * @sitt15/cli — public API surface.
  *
  * The CLI binary is the primary interface; these exports exist for programmatic
  * and testing use. Stability is best-effort until v1.

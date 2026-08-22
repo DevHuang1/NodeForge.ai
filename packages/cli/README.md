@@ -1,4 +1,4 @@
-# @nodeforge/cli
+# @sitt15/cli
 
 `nodeforge` is an evidence-first code verification CLI. It maps a repository's capabilities, runs deterministic security scanning, executes tests under a guarded, allow-listed harness, and synthesizes everything into a persisted, auditable run — so that every claim it makes is backed by evidence it actually collected.
 
@@ -16,7 +16,7 @@ One-line install (macOS / Linux):
 curl -fsSL https://raw.githubusercontent.com/example/nodeforge-ai/main/install.sh | sh
 ```
 
-The script verifies Node.js >= 18.17, installs `@nodeforge/cli` globally via npm, runs `nodeforge --version` to confirm, and prints next steps. If a global install fails due to permissions (EACCES), it automatically retries into a user prefix (`~/.nodeforge`) and prints the exact PATH line to append to your shell rc.
+The script verifies Node.js >= 18.17, installs `@sitt15/cli` globally via npm, runs `nodeforge --version` to confirm, and prints next steps. If a global install fails due to permissions (EACCES), it automatically retries into a user prefix (`~/.nodeforge`) and prints the exact PATH line to append to your shell rc.
 
 | Environment variable | Effect |
 | --- | --- |
@@ -28,8 +28,8 @@ The script verifies Node.js >= 18.17, installs `@nodeforge/cli` globally via npm
 Prefer plain npm? Both of these are equivalent:
 
 ```bash
-npm i -g @nodeforge/cli   # install globally
-npx @nodeforge/cli --help # or run without installing
+npm i -g @sitt15/cli   # install globally
+npx @sitt15/cli --help # or run without installing
 ```
 
 Requires Node.js >= 18.17.
@@ -49,7 +49,7 @@ npm run build
 node bin/nodeforge.js --help
 
 # ...or expose it globally as `nodeforge`
-npm link          # undo later with: npm unlink -g @nodeforge/cli
+npm link          # undo later with: npm unlink -g @sitt15/cli
 nodeforge --help
 ```
 
@@ -402,7 +402,7 @@ jobs:
         with:
           node-version: 20
       - name: Install nodeforge
-        run: npm i -g @nodeforge/cli
+        run: npm i -g @sitt15/cli
       - name: Review
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

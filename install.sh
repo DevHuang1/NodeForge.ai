@@ -17,7 +17,7 @@
 
 set -eu
 
-PACKAGE="@nodeforge/cli"
+PACKAGE="@sitt15/cli"
 BIN_NAME="nodeforge"
 NVM_VERSION="v0.40.3"
 

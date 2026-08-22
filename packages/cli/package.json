@@ -1,5 +1,5 @@
 {
-  "name": "@nodeforge/cli",
+  "name": "@sitt15/cli",
   "version": "0.1.0",
   "description": "Evidence-first code verification CLI: deterministic security scanning, guarded test execution, honest reporting, and audit trails.",
   "license": "MIT",
@@ -7,7 +7,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "nodeforge": "./bin/nodeforge.js"
+    "nodeforge": "bin/nodeforge.js"
   },
   "files": [
     "bin",
@@ -28,7 +28,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/example/nodeforge-ai",
+      "url": "git+https://github.com/DevHuang1/NodeForge.ai.git",
     "directory": "packages/cli"
   },
   "scripts": {
