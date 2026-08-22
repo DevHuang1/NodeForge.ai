@@ -210,7 +210,7 @@ export function extractJson(text: string): unknown {
     (err as Error & { status?: number }).status = 0;
     throw err;
   }
-  let depth = 0;
+  const openers: string[] = [];
   let inString = false;
   let escaped = false;
   for (let i = start; i < withoutFences.length; i++) {
@@ -228,29 +228,50 @@ export function extractJson(text: string): unknown {
     if (ch === '"') {
       inString = true;
     } else if (ch === "{") {
-      depth++;
-    } else if (ch === "}") {
-      depth--;
-      if (depth === 0) {
-        return JSON.parse(withoutFences.slice(start, i + 1));
+      openers.push("}");
+    } else if (ch === "[") {
+      openers.push("]");
+    } else if (ch === "}" || ch === "]") {
+      const expected = openers.pop();
+      // Mismatched bracket — malformed output, not merely truncated.
+      if (!expected || expected !== ch) {
+        throw jsonError(
+          "Malformed JSON in model output: mismatched brackets.",
+          ch
+        );
+      }
+      if (openers.length === 0) {
+        const slice = withoutFences.slice(start, i + 1);
+        try {
+          return JSON.parse(slice);
+        } catch (cause) {
+          throw jsonError(
+            `Invalid JSON object in model output: ${(cause as Error).message}`,
+            cause
+          );
+        }
       }
     }
   }
-  if (depth > 0) {
-    const candidate = withoutFences.slice(start) + "}".repeat(depth);
+  if (openers.length > 0) {
+    const closers = openers.reverse().join("");
+    const candidate = withoutFences.slice(start) + closers;
     try {
       return JSON.parse(candidate);
-    } catch {
-      const err = new Error(
-        "Unbalanced JSON in model output (likely truncated)."
+    } catch (cause) {
+      throw jsonError(
+        "Unbalanced JSON in model output (likely truncated).",
+        cause
       );
-      (err as Error & { status?: number }).status = 0;
-      throw err;
     }
   }
-  const err = new Error("Unbalanced JSON in model output.");
-  (err as Error & { status?: number }).status = 0;
-  throw err;
+  throw jsonError("Unbalanced JSON in model output.");
+}
+
+function jsonError(message: string, cause?: unknown): Error & { status: number } {
+  const err = new Error(message, { cause }) as Error & { status: number };
+  err.status = 0;
+  return err;
 }
 
 /**

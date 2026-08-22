@@ -4,6 +4,7 @@ import {
   checkCommandSafety,
   offlineRun,
   parsePytestOutput,
+  safeJoin,
   snakeCase,
   EXECUTION_POLICY,
 } from "../lib/executor";
@@ -76,4 +77,19 @@ test("parsePytestOutput handles toolchain-unavailable output", () => {
   assert.equal(parsed.passed, 0);
   assert.equal(parsed.failed, 0);
   assert.equal(parsed.collected, 0);
+});
+
+test("safeJoin contains untrusted paths inside the sandbox dir", () => {
+  const dir = "/tmp/nodeforge-exec-abc";
+  assert.equal(safeJoin(dir, "src/app.py"), "/tmp/nodeforge-exec-abc/src/app.py");
+  assert.equal(safeJoin(dir, "tests/test_x.py"), "/tmp/nodeforge-exec-abc/tests/test_x.py");
+});
+
+test("safeJoin rejects path traversal and absolute escapes", () => {
+  const dir = "/tmp/nodeforge-exec-abc";
+  assert.equal(safeJoin(dir, "../../etc/passwd"), null);
+  assert.equal(safeJoin(dir, "a/../../../../escape"), null);
+  assert.equal(safeJoin(dir, "/Users/victim/.zshenv"), null);
+  assert.equal(safeJoin(dir, ""), null);
+  assert.equal(safeJoin(dir, "."), dir);
 });

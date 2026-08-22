@@ -239,7 +239,8 @@ async function materialize(
   const writeAll = async (list: Array<{ path: string; content: string }>) => {
     for (const f of list) {
       if (!f.path || f.content == null) continue;
-      const p = path.join(dir, f.path);
+      const p = safeJoin(dir, f.path);
+      if (!p) continue;
       await fs.mkdir(path.dirname(p), { recursive: true });
       await fs.writeFile(p, f.content, "utf8");
     }
@@ -249,6 +250,20 @@ async function materialize(
   );
   await writeAll(implFiles);
   return dir;
+}
+
+/**
+ * Resolve `relPath` inside `dir`, rejecting anything that escapes it
+ * (absolute paths, `..` segments, symlink-free containment check happens at
+ * the join level — model- or repo-supplied paths are untrusted input).
+ * Returns null when the path would land outside `dir`.
+ */
+export function safeJoin(dir: string, relPath: string): string | null {
+  if (!relPath || path.isAbsolute(relPath)) return null;
+  const root = path.resolve(dir);
+  const resolved = path.resolve(root, relPath);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) return null;
+  return resolved;
 }
 
 interface RunResult {
