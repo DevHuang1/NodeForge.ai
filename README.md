@@ -14,6 +14,13 @@ checked against requirements and risks.
 > Submitted to **Reverie Hacks 2026** · Track 2 · ML Prompt Engineering ·
 > Interactive submission · [Live demo](https://nodeforge-ai.vercel.app)
 
+This monorepo contains two deliverables built on the same evidence-first engine:
+
+| | What it is | Where |
+| --- | --- | --- |
+| **Web app** | Interactive 4-node review pipeline with inspectable artifacts, quality gate, scorecards, and PR review UI | `app/`, `components/`, `lib/` |
+| **CLI package** | [`@sitt15/cli`](packages/cli/README.md) — scriptable `nodeforge` command for scanning, guarded test execution, reviews, SARIF/JSON reports, and CI gating | `packages/cli/` |
+
 ---
 
 ## Built with
@@ -33,8 +40,56 @@ checked against requirements and risks.
 ![Featherless](https://img.shields.io/badge/Featherless-3E63DD?style=for-the-badge)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
+[![npm](https://img.shields.io/npm/v/@sitt15/cli?style=for-the-badge&logo=npm&label=npm%20@sitt15/cli&color=CB3837)](https://www.npmjs.com/package/@sitt15/cli)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ---
+
+## Install
+
+The NodeForge CLI ships as the npm package **[`@sitt15/cli`](https://www.npmjs.com/package/@sitt15/cli)** (binary: `nodeforge`).
+
+**Requirements:** Node.js ≥ 18.17 (no other toolchain needed for scan/report; `test` needs the target project's own runner, e.g. pytest/go/npm).
+
+```bash
+# Install globally
+npm install -g @sitt15/cli
+
+# Or run without installing
+npx @sitt15/cli --help
+```
+
+Verify the installation:
+
+```bash
+nodeforge --version
+```
+
+macOS / Linux one-liner (bootstraps Node via nvm if missing):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DevHuang1/NodeForge.ai/main/install.sh | sh
+```
+
+<details>
+<summary>Install from source</summary>
+
+```bash
+git clone https://github.com/DevHuang1/NodeForge.ai.git
+cd NodeForge.ai
+npm run cli -- --help   # builds packages/cli, then runs it from source
+```
+
+Or link your local build globally:
+
+```bash
+npm ci --prefix packages/cli
+npm run build --prefix packages/cli
+npm link --prefix packages/cli
+nodeforge --version
+```
+
+</details>
 
 ## The problem
 
@@ -97,6 +152,51 @@ Two things make it more than a chain of prompts:
   `go test`, `npm test`) and blocks shell pipelines, `rm -rf`, etc.
 - Dark mode, human-review panel, and revision timeline.
 
+## Use cases
+
+**Pre-merge PR review for teams.** Point NodeForge at a repo/PR (or paste a
+fine-grained PAT) and get findings from two independent sources — deterministic
+security rules plus the model — each with file/line, evidence, severity, and a
+required action. Reviewers approve, dismiss, request revision, or assign each
+finding; a proposed patch can be approved or rejected; everything lands in
+history with an audit trail.
+
+**CI quality gate.** Run `nodeforge review .` in your workflow and gate merges
+on exit codes: `0` verified, `1` findings or failing tests, `3` blocked
+verification. Emit `--sarif` to feed GitHub code scanning, or `--json` for
+custom policy checks. See the [CLI's CI example](packages/cli/README.md#ci-usage).
+
+**Security audit before release.** `nodeforge scan .` flags hard-coded secrets,
+shell injection, unsafe subprocess use, unsafe deserialization, suspicious
+network activity, and unsafe filesystem access — fully deterministic, no LLM,
+no network, no execution. Safe to run on untrusted code.
+
+**Honest test verification.** `nodeforge test .` detects the runner from
+manifests/lockfiles (`pytest`, `go test`, `vitest`, `jest`, npm/pnpm/yarn test)
+and executes it argv-only in an isolated temp dir with a hard timeout. Every
+suite reports `passed`, `failed`, `blocked`, or `not_executed` — it never
+claims a run that didn't happen.
+
+**Auditable evidence trail.** Every run persists structured artifacts
+(`run.json`, `findings.json`, `tests.json`, `evidence.json`,
+`audit.jsonl`) under `.nodeforge/runs/<run-id>/`. Export terminal, JSON,
+Markdown, or SARIF reports for compliance review; replay the exact event
+sequence with `nodeforge audit latest`.
+
+**Model & prompt evaluation.** The web app runs a baseline single-prompt path
+and the 4-node pipeline on the *same raw request* for a side-by-side scorecard,
+and can run the full pipeline against a second model ID — useful for measuring
+whether structured pipelines actually beat one big prompt.
+
+**Prompt-engineering research and teaching.** Every node's system prompt is
+visible, editable, and persisted; every intermediate artifact is inspectable as
+source, diff, or raw JSON. A concrete workbench for studying context refinement,
+targeted revision loops, and schema-constrained LLM output.
+
+**Offline demos and onboarding.** No API key? The web app runs offline with
+sample artifacts and a bundled sample PR (`acme/notes-search#42`); the CLI's
+deterministic stages need no provider at all.
+
 ## Getting started
 
 ```bash
@@ -125,6 +225,7 @@ Copy `.env.example` to `.env.local` and set at least one provider key:
 | `GITHUB_MAX_FILES` | Cap on changed files fetched per PR (default 30) |
 | `NODEFORGE_EXECUTOR` | Test backend: `offline` (default, never claims execution), `local` (guarded real run in a temp dir; needs the toolchain), or `sandbox` (reserved) |
 | `NODEFORGE_DATA_DIR` | Review-run/audit persistence dir (default `./.data`) |
+| `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | Per-IP fixed-window limit on expensive endpoints (`/api/pipeline/run`, `/api/baseline`, `POST /api/reviews`); defaults 60s / 10 |
 
 A `GITHUB_TOKEN` env var enables real PR retrieval for every user. Judges can
 also paste their own fine-grained PAT ("Contents: Read") into the PR Review
@@ -150,7 +251,23 @@ npm run build      # production build
 npm run start      # production server
 npm run lint       # eslint
 npm test           # node:test unit suite (lib + API logic, offline only)
+npm run cli        # build packages/cli, then run the nodeforge CLI (precli auto-builds)
 ```
+
+### CLI quickstart
+
+Install once (see [Install](#install)), then:
+
+```bash
+nodeforge init          # scaffold .nodeforge/config.json with safe defaults
+nodeforge scan .        # deterministic security scan
+nodeforge test .        # guarded test execution with honest statuses
+nodeforge review .      # full pipeline: context → scan → tests → synthesis
+nodeforge report latest --format sarif   # SARIF 2.1.0 for code scanning
+```
+
+Full command reference, configuration, exit codes, and security model:
+[`packages/cli/README.md`](packages/cli/README.md).
 
 ## Deployment
 
@@ -161,8 +278,14 @@ Vercel dashboard — the API keys are server-only; nothing is committed.
 ## Repository layout
 
 ```
-app/          App Router routes: pages + API routes (/api/config, /api/baseline, /api/pipeline/run, /api/reviews, /api/findings/..., /api/evaluation, /api/history)
-components/   UI: PipelineDemo, NodeCard, QualityGate, Scorecard, ReviewPanel, PromptLibrary, MermaidSection, ...
-lib/          Core logic: prompts, pipeline orchestration, LLM abstraction, repository context, security rules, executor, persistence, audit, evaluation
-tests/        Unit tests (node:test)
+app/            App Router routes: pages + API routes (/api/config, /api/baseline, /api/pipeline/run, /api/reviews, /api/findings/..., /api/evaluation, /api/history)
+components/     UI: PipelineDemo, NodeCard, QualityGate, Scorecard, ReviewPanel, PromptLibrary, MermaidSection, ...
+lib/            Core logic: prompts, pipeline orchestration, LLM abstraction, repository context, security rules, executor, persistence, audit, evaluation
+packages/cli/   @sitt15/cli — the nodeforge command: scanners, guarded executor, reporters (terminal/json/markdown/sarif), storage, audit
+tests/          Unit tests (node:test)
+remotion/       Demo video scenes (Remotion)
 ```
+
+## License
+
+[MIT](LICENSE) © DevHuang1. The CLI package [`@sitt15/cli`](packages/cli/LICENSE) is also MIT-licensed; its published tarball carries the same license file.

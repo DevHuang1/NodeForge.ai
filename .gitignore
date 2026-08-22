@@ -58,3 +58,7 @@ REMOTION.md
 
 # nodeforge cli local state
 .nodeforge/
+
+# local agent tooling (Kilo skills)
+/.kilo/
+skills-lock.json
