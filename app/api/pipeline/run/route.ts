@@ -1,5 +1,6 @@
 import { runNode2, runNode3, runNode4 } from "@/lib/pipeline";
 import { LLMNotConfiguredError } from "@/lib/llm";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { TEST_CASES } from "@/lib/test-cases";
 import type { RunNodeRequest } from "@/lib/types";
 
@@ -7,6 +8,9 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
+  const limited = checkRateLimit(request, "pipeline");
+  if (limited) return limited;
+
   let body: RunNodeRequest;
   try {
     body = (await request.json()) as RunNodeRequest;

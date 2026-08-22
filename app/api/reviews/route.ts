@@ -1,6 +1,7 @@
 import { getOfflinePr, getPullRequest } from "@/lib/github";
 import { createReviewRun } from "@/lib/review-pipeline";
 import { listReviewRuns } from "@/lib/persistence";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { ReviewRunOptions } from "@/lib/review-pipeline";
 
 export const runtime = "nodejs";
@@ -28,6 +29,9 @@ function isSample(owner: string, repo: string, number: number): boolean {
 }
 
 export async function POST(request: Request) {
+  const limited = checkRateLimit(request, "reviews");
+  if (limited) return limited;
+
   let body: CreateBody;
   try {
     body = (await request.json()) as CreateBody;
